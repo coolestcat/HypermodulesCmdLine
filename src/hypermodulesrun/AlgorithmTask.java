@@ -67,7 +67,11 @@ public class AlgorithmTask implements Runnable {
 		this.sampleValues = sampleValues;
 		this.shuffleNumber = shuffleNumber;
 		this.stat = stat;
+		
+		if (stat.toUpperCase().equals("LOGRANK")){
+			
 		ArrayList<String[]> sortedClinicals = new ArrayList<String[]>();
+		
 		Multimap<Double, Integer> followupDaysPosition = ArrayListMultimap.create();
 		
 		for (int k=0; k<clinicalValues.size(); k++){
@@ -119,6 +123,10 @@ public class AlgorithmTask implements Runnable {
 			
 		}
 		this.clinicalValues = sortedClinicals;
+		}
+		else{
+			this.clinicalValues = clinicalValues;
+		}
 	}
 	
 	public void run() {
@@ -128,10 +136,10 @@ public class AlgorithmTask implements Runnable {
 		this.originalResults = ot.callTest();
 		fixOriginalResults();
 		
+		if (stat.toUpperCase().equals("LOGRANK")){
+			this.classification = ot.testHighOrLow(this.originalResults);
+		}
 
-		this.classification = ot.testHighOrLow(this.originalResults);
-		
-		
 		int nCores = Runtime.getRuntime().availableProcessors();
 		System.out.println("Number of Available Processors: " + nCores);
 		combinedShuffling = new ArrayList<HashMap<String, Multimap<String, Double>>>();
@@ -343,7 +351,9 @@ public class AlgorithmTask implements Runnable {
 			ArrayList<HashMap<String, Double>> ah = new ArrayList<HashMap<String, Double>> ();
 			ah.add(originalResults.get(s));
 			ah.add(adjustedResults.get(s));
-			ah.add(classification.get(s));
+			if (stat.toUpperCase().equals("LOGRANK")){
+				ah.add(classification.get(s));
+			}
 			//ah.add(adjustedWithR.get(s));
 			HashMap<ArrayList<HashMap<String, Double>>, Multimap<String, Double>> hah = new HashMap<ArrayList<HashMap<String, Double>>, Multimap<String, Double>>();
 			hah.put(ah,  shuffling.get(s));

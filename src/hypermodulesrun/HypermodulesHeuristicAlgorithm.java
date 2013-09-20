@@ -99,6 +99,7 @@ public class HypermodulesHeuristicAlgorithm {
 			}
 		}
 		
+		//System.out.println("genemapsize: " + allGeneSamplesMap.size());
 		
 		Multimap<String, String> memoryone = ArrayListMultimap.create();
 		HashSet<String> g2sSamples = new HashSet<String>();
@@ -454,7 +455,6 @@ public class HypermodulesHeuristicAlgorithm {
 	
 	public Double testModuleFisher(String thisNetwork, int limit){
 
-		
 		String[] genes = thisNetwork.split(":");
 		
 		ArrayList<String> patients = new ArrayList<String>();
