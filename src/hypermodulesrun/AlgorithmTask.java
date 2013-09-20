@@ -228,12 +228,13 @@ public class AlgorithmTask implements Runnable {
 			i = Double.valueOf(br.readLine());
 			if (i<0 || i>1){
 				System.out.println("Please enter a p-Value cutoff between 0 and 1");
-				printOptions();
 			}
 		} catch (NumberFormatException e) {
 			System.out.println("Please enter a p-Value cutoff between 0 and 1");
+			return;
 		} catch (IOException e) {
 			System.out.println("Please enter a p-Value cutoff between 0 and 1");
+			return;
 		}
 		
 		ArrayList<HashMap<String, Double>> a = extractMostCorrelated(i);
@@ -360,12 +361,14 @@ public class AlgorithmTask implements Runnable {
 			i = Double.valueOf(br.readLine());
 			if (i<0 || i>1){
 				System.out.println("Please enter a p-Value cutoff between 0 and 1");
-				printOptions();
+				return;
 			}
 		} catch (NumberFormatException e) {
 			System.out.println("Please enter a p-Value cutoff between 0 and 1");
+			return;
 		} catch (IOException e) {
 			System.out.println("Please enter a p-Value cutoff between 0 and 1");
+			return;
 		}
 		
 		ArrayList<HashMap<String, Double>> a = extractMostCorrelated(i);
@@ -376,10 +379,16 @@ public class AlgorithmTask implements Runnable {
 		final String lineSep = System.getProperty("line.separator");
 		String fileName = null;
 		FileWriter fout = null;
+		
+		System.out.println("Please enter a valid path to save the file");
+		try {
+			fileName = br.readLine();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			return;
+		}
 
 		try {
-				System.out.println("Please enter a valid path to save the file");
-				fileName = br.readLine();
 				//fileName = file.getAbsolutePath();
 				if (!fileName.substring(fileName.length()-4,fileName.length()).equals(".csv")){
 					fileName = fileName + ".csv";
@@ -405,6 +414,9 @@ public class AlgorithmTask implements Runnable {
 										  "Error Writing to \"" + fileName + "\"",
 										  JOptionPane.ERROR_MESSAGE);
 		} 
+		catch (Exception e){
+			e.printStackTrace();
+		}
 		finally {
 			if (fout != null) {
 				try {

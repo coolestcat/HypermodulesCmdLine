@@ -127,7 +127,7 @@ public class FDRAdjust {
 		}
 		*/
 		
-		System.out.println(adjustedResults.size());
+		//System.out.println(adjustedResults.size());
 		return adjustedResults;
 		
 	}

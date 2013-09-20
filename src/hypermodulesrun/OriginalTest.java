@@ -60,17 +60,17 @@ public class OriginalTest{
 		HashSet<String> allPaths = new HashSet<String>();
 		allPaths = ha.getAllPaths(seedName);
 		
-		System.out.println("ALL PATHS SIZE: " + allPaths.size());
+		//System.out.println("ALL PATHS SIZE: " + allPaths.size());
 		
 		
 		ArrayList<String> compress = ha.compressTokens(allPaths, seedName);
 		
-		System.out.println("COMPRESSED SIZE: " + compress.size());
+		//System.out.println("COMPRESSED SIZE: " + compress.size());
 		
 		HashMap<String, Double> answer = ha.mineHublets(compress);
 		returnMap = answer;
 		
-		System.out.println("FINAL SIZE: " + returnMap.size());
+		//System.out.println("FINAL SIZE: " + returnMap.size());
 		return returnMap;
 	}
 	
