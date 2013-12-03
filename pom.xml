@@ -118,5 +118,10 @@
    		    <artifactId>layout-api</artifactId>
    		    <version>${cytoscape.api.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>ss</groupId>		
+			<artifactId>jsc</artifactId>
+			<version>1.0</version>
+		</dependency>
   </dependencies>
 </project>

@@ -12,7 +12,7 @@ import org.cytoscape.model.CyTableUtil;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-public class ShuffleTestCall implements Callable<HashMap<String, Multimap<String, Double>>> {
+public class ProgressBarShuffle implements Callable<HashMap<String, Multimap<String, Double>>> {
 	
 	private ArrayList<String[]> network;
 	private ArrayList<String[]> sampleValues;
@@ -22,7 +22,7 @@ public class ShuffleTestCall implements Callable<HashMap<String, Multimap<String
 	private String stat;
 
 	
-	public ShuffleTestCall(ArrayList<String[]> network, 
+	public ProgressBarShuffle(ArrayList<String[]> network, 
 			 			ArrayList<String[]> sampleValues, 
 			 			ArrayList<String[]> clinicalValues,
 			 			int shuffleNumber,
@@ -50,6 +50,7 @@ public class ShuffleTestCall implements Callable<HashMap<String, Multimap<String
 			}
 			
 			for (String runSeed : allSeeds){
+				System.err.print(".");
 				Multimap<String, Double> oneResult = testSeed(ha, runSeed);
 				rt.put(runSeed, oneResult);
 			}
@@ -80,3 +81,4 @@ public class ShuffleTestCall implements Callable<HashMap<String, Multimap<String
 	
 	
 }
+

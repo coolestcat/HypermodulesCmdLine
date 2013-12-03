@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import jsc.contingencytables.ContingencyTable2x2;
+import jsc.contingencytables.FishersExactTest;
+
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 
@@ -76,9 +79,45 @@ public class HypermodulesHeuristicAlgorithm {
 			System.exit(0);
 		}
 
+		/**
+		 * 
+		 * NEW PART
+		 * 
+		 */
+		/*
+		Multimap<String, String> mss = ArrayListMultimap.create();
+		for (int i=0; i<sampleValues.size(); i++){
+			mss.put(sampleValues.get(i)[0], sampleValues.get(i)[1]);
+		}
+		
+		ArrayList<String[]> fixedSamples = new ArrayList<String[]>();
+		for (String s : mss.keySet()){
+			String oneLine = "";
+			for (String t : mss.get(s)){
+				oneLine = oneLine + t + ":";
+			}
+			String[] d = new String[2];
+			d[0] = s;
+			d[1] = oneLine;
+			fixedSamples.add(d);
+		}
+		
+		
+		sampleValues = fixedSamples;
+		*/
+		/**
+		 * 
+		 * 
+		 * NEW PART
+		 * 
+		 * 
+		 */
+		
 		allGeneSamplesMap = new HashMap<String, String>();
 		
+		
 		for (int i=0; i<sampleValues.size(); i++){
+			//System.out.println(sampleValues.get(i)[1]);
 			allGeneSamplesMap.put(sampleValues.get(i)[0], sampleValues.get(i)[1]);
 		}
 		
@@ -154,7 +193,10 @@ public class HypermodulesHeuristicAlgorithm {
 		
 		status = new boolean[this.clinicalValues.size()];
 		for (int k=0; k<this.clinicalValues.size(); k++){
-			if (clinicalValues.get(k)[1].toUpperCase().equals("DECEASED")){
+			if (clinicalValues.get(k)[1].toUpperCase().equals("DECEASED") || 
+					clinicalValues.get(k)[1].toUpperCase().equals("NO") ||
+					clinicalValues.get(k)[1].toUpperCase().equals("N") ||
+					clinicalValues.get(k)[1].equals("1")){
 				status[k]=true;
 			}
 			else{
@@ -515,8 +557,21 @@ public class HypermodulesHeuristicAlgorithm {
 			}
 		}
 		
+		/*
+		if (clinicalVariableHash.size()==2){
+			ContingencyTable2x2 ct = new ContingencyTable2x2(matrix);
+			FishersExactTest fet = new FishersExactTest(ct);
+			return fet.getApproxSP();
+		}
+		else{
+			FishersExact fe = new FishersExact(matrix);
+			return fe.fisher2c();
+		}
+		*/
+		
 		FishersExact fe = new FishersExact(matrix);
 		return fe.fisher2c();
+		
 	}
 	
 	public Double testModuleClinical(String thisNetwork, int limit, boolean flag){

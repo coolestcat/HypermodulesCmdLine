@@ -58,15 +58,24 @@ public class AlgorithmTask implements Runnable {
 
 	private String stat;
 	
+	private double pValueCutoff;
+	
+	private int numberCores;
+	
 	public AlgorithmTask(ArrayList<String[]> network, 
 						 ArrayList<String[]> sampleValues, 
 						 ArrayList<String[]> clinicalValues,
-						 int shuffleNumber, String stat){
+						 int shuffleNumber, 
+						 String stat,
+						 double pValueCutoff,
+						 int numberCores){
 		
 		this.network = network;
 		this.sampleValues = sampleValues;
 		this.shuffleNumber = shuffleNumber;
 		this.stat = stat;
+		this.pValueCutoff = pValueCutoff;
+		this.numberCores = numberCores;
 		
 		if (stat.toUpperCase().equals("LOGRANK")){
 			
@@ -114,11 +123,11 @@ public class AlgorithmTask implements Runnable {
 		}
 		
 		for (int k=0; k<sortedPositions.size(); k++){
-			String[] thisString = new String[4];
+			String[] thisString = new String[3];
 			thisString[0]=clinicalValues.get(sortedPositions.get(k))[0];
 			thisString[1]=clinicalValues.get(sortedPositions.get(k))[1];
 			thisString[2]=clinicalValues.get(sortedPositions.get(k))[2];
-			thisString[3]=clinicalValues.get(sortedPositions.get(k))[3];
+			//thisString[3]=clinicalValues.get(sortedPositions.get(k))[3];
 			sortedClinicals.add(thisString);
 			
 		}
@@ -131,7 +140,7 @@ public class AlgorithmTask implements Runnable {
 	
 	public void run() {
 		long before = System.nanoTime();
-		System.out.println("Running Original Test...");
+		System.err.println("Running Original Test...");
 		OriginalTest ot = new OriginalTest(network, sampleValues, clinicalValues, shuffleNumber, stat);
 		this.originalResults = ot.callTest();
 		fixOriginalResults();
@@ -140,8 +149,9 @@ public class AlgorithmTask implements Runnable {
 			this.classification = ot.testHighOrLow(this.originalResults);
 		}
 
-		int nCores = Runtime.getRuntime().availableProcessors();
-		System.out.println("Number of Available Processors: " + nCores);
+		int nCores = numberCores;
+		//int nCores = Runtime.getRuntime().availableProcessors();
+		System.err.println("Number of Available Processors: " + nCores);
 		combinedShuffling = new ArrayList<HashMap<String, Multimap<String, Double>>>();
 		
 		int shuffleCount = 0;
@@ -157,7 +167,7 @@ public class AlgorithmTask implements Runnable {
 			shuffleCount += (int) shuffleNumber/nCores;
 		}
 		
-		ShuffleTestCall st = new ShuffleTestCall(this.network, this.sampleValues, this.clinicalValues, (int) (shuffleNumber - shuffleCount), this.stat);
+		ProgressBarShuffle st = new ProgressBarShuffle(this.network, this.sampleValues, this.clinicalValues, (int) (shuffleNumber - shuffleCount), this.stat);
 		Future<HashMap<String, Multimap<String, Double>>> submitPool = executor.submit(st);
 		list.add(submitPool);
 		
@@ -170,12 +180,16 @@ public class AlgorithmTask implements Runnable {
 			}
 		}
 		
+		
 		executor.shutdown();
+		System.err.println();
+		System.err.println("Finished Running on All Cores");
+		
 		moveShuffled();
-		System.out.println("Finished Moving");
+		System.err.println("Finished Moving");
 		
 		adjustResults();
-		System.out.println("Finished Adjusting");
+		System.err.println("Finished Adjusting");
 		
 		allResults = resultsFormat();
 		HashMap<String, String> parameters = new HashMap<String, String>();
@@ -184,8 +198,10 @@ public class AlgorithmTask implements Runnable {
 
 		long after = System.nanoTime();
 		double timeToRun = (double) (after-before)/1000000000;
-		System.out.println("Time to run: " + timeToRun + " seconds");
-		loop();
+		System.err.println("Time to run: " + timeToRun + " seconds");
+		
+		justPrint();
+		//loop();
 	}
 
 	
@@ -226,6 +242,19 @@ public class AlgorithmTask implements Runnable {
 		System.out.println("0 - Export results to a CSV file");
 		System.out.println("1 - Print results to screen");
 		System.out.println("2 - Exit Program (WARNING - ALL RESULTS WILL BE ERASED)");
+	}
+	
+	public void justPrint(){
+		ArrayList<HashMap<String, Double>> a = extractMostCorrelated(pValueCutoff);
+
+		HashMap<String, Double> mostCorrelated = a.get(0);
+		HashMap<String, Double> mostCorrelatedFDR = a.get(1);
+		
+		System.out.println("Module" + '\t' + "Statistical Test P-Value" + '\t' + "FDR P-Value");
+		System.out.println();
+		for (String s : mostCorrelated.keySet()){
+			System.out.println(s + '\t' + mostCorrelated.get(s) + '\t' + mostCorrelatedFDR.get(s));
+		}
 	}
 	
 	public void printToScreen(){

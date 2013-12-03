@@ -43,13 +43,13 @@ public class OriginalTest{
 			}
 		}
 		
-		System.out.println("allSeeds size: " + allSeeds.size());
+		System.err.println("Number of Seeds: " + allSeeds.size());
 			
 		for (String runSeed : allSeeds){
 			HashMap<String, Double> oneResult = testSeed(ha, runSeed);
 			rt.put(runSeed, oneResult);		
 		}
-		System.out.println("Finished running Original Test.");
+		System.err.println("Finished Running Original Test.");
 		
 		return rt;
 	}
