@@ -37,11 +37,17 @@ public class MainRun {
 			*/
 			if (args.length<2){
 				printManual();
+				return;
 			}
 			
 			
 			for (int i=0; i<args.length; i++){
 				if (args[i].charAt(0)=='-'){
+					if (args[i].length()!=2){
+						System.err.println("Invalid flag usage.");
+						printManual();
+						return;
+					}
 					if (i+1<args.length){
 						if (args[i+1].charAt(0)!='-'){
 							switch(args[i].charAt(1)){
@@ -58,7 +64,7 @@ public class MainRun {
 								shuffleNumber = Integer.valueOf(args[i+1]);
 								break;
 							case 'p':
-								pValueCutoff = Integer.valueOf(args[i+1]);
+								pValueCutoff = Double.valueOf(args[i+1]);
 								break;
 							case 't':
 								stat = args[i+1];

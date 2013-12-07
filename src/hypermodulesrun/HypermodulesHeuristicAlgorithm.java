@@ -117,8 +117,15 @@ public class HypermodulesHeuristicAlgorithm {
 		
 		
 		for (int i=0; i<sampleValues.size(); i++){
+			if (allGeneSamplesMap.get(sampleValues.get(i)[0])!=null){
+				String sti = allGeneSamplesMap.get(sampleValues.get(i)[0]);
+				sti = sti + ":" + sampleValues.get(i)[1];
+				allGeneSamplesMap.put(sampleValues.get(i)[0], sti);
+			}
+			else{
 			//System.out.println(sampleValues.get(i)[1]);
 			allGeneSamplesMap.put(sampleValues.get(i)[0], sampleValues.get(i)[1]);
+			}
 		}
 		
 		HashSet<String> allNodes = new HashSet<String>();
@@ -568,10 +575,21 @@ public class HypermodulesHeuristicAlgorithm {
 			return fe.fisher2c();
 		}
 		*/
+		int c = 0;
+		for (int i=0; i<clinicalValues.size(); i++){
+			if (clinicalValues.get(i)[1].equals(hashArray.get(0))){
+				c++;
+			}
+		}
 		
-		FishersExact fe = new FishersExact(matrix);
-		return fe.fisher2c();
-		
+		if (clinicalVariableHash.size()==2){
+			hypermodulesrun.FishersExactTest fet = new hypermodulesrun.FishersExactTest(clinicalValues.size(), c, alpha, matrix[0][0]);
+			return fet.getResult();
+		}
+		else{
+			FishersExact fe = new FishersExact(matrix);
+			return fe.fisher2c();
+		}
 	}
 	
 	public Double testModuleClinical(String thisNetwork, int limit, boolean flag){

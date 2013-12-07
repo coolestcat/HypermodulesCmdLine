@@ -50,6 +50,7 @@ public class OriginalTest{
 			rt.put(runSeed, oneResult);		
 		}
 		System.err.println("Finished Running Original Test.");
+		System.err.println("Finished Analyzing Original Network");
 		
 		return rt;
 	}

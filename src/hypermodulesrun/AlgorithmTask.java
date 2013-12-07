@@ -152,6 +152,7 @@ public class AlgorithmTask implements Runnable {
 		int nCores = numberCores;
 		//int nCores = Runtime.getRuntime().availableProcessors();
 		System.err.println("Number of Available Processors: " + nCores);
+		System.err.println("Computing Background from " + shuffleNumber + " Random Networks");
 		combinedShuffling = new ArrayList<HashMap<String, Multimap<String, Double>>>();
 		
 		int shuffleCount = 0;
@@ -250,8 +251,7 @@ public class AlgorithmTask implements Runnable {
 		HashMap<String, Double> mostCorrelated = a.get(0);
 		HashMap<String, Double> mostCorrelatedFDR = a.get(1);
 		
-		System.out.println("Module" + '\t' + "Statistical Test P-Value" + '\t' + "FDR P-Value");
-		System.out.println();
+		System.out.println("Module" + '\t' + "Pvalue_test" + '\t' + "Pvalue_background");
 		for (String s : mostCorrelated.keySet()){
 			System.out.println(s + '\t' + mostCorrelated.get(s) + '\t' + mostCorrelatedFDR.get(s));
 		}
