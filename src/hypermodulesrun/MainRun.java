@@ -214,9 +214,15 @@ public class MainRun {
 		System.out.println("SUMMARY:");
 		System.out.println("\tUSAGE: java -jar [*.jar] [-n network_interaction_file] [-s samplemutationdata] [-c clinicaldata] [-t statistical_test] [-S shuffle_number] [-C numberofprocessors] [-p pvaluecutoff]");
 		System.out.println("\tthe first three fields are mandatory.");
-		System.out.println("OPTIONS:");
-		System.out.println("\t-t \t Either \"logrank\" or \"fisher\". By default, this is set to logrank");
-		System.out.println("\t-C \t The number of cores you with to allocate to HyperModules. By default, this is set to all available cores at runtime.");
+		System.out.println("EXAMPLE:");
+		System.out.println("\tjava -jar HyperModules-1.0.jar -n example/network_interaction_data.csv -c example/clinical_data.csv -s example/mutation_data.csv");
+		System.out.println("REQUIRED PARAMETERS:");
+		System.out.println("\t-n \t CSV file with network interactions. Two first columns are considered as names of interacting genes (proteins).");
+		System.out.println("\t-s \t CSV file with gene mutations. First column is gene (protein) ID, and second column is patient ID.");
+		System.out.println("\t-c \t CSV file with patient clinical data. First column is patient ID. Following columns are vital status and followup time (for survival analysis with log-rank test) or discrete clinical parameter (Fisher's test).");
+		System.out.println("OPTIONAL PARAMETERS:");
+		System.out.println("\t-t \t Either \"logrank\" or \"fisher\". Log-rank test is used for survival analysis and Fisher's exact test is used for analysing categorical clinical variables. By default, this is set to logrank.");
+		System.out.println("\t-C \t The number of cores allocated to HyperModules. By default, this is set to all available cores at runtime.");
 		System.out.println("\t-S \t The number of background permutations. By default, this is set to 1000.");
 		System.out.println("\t-p \t The p-value cutoff for significance. By default, this is set to 0.05");
 		System.out.println("\t-h \t Prints the manual.");
@@ -246,7 +252,7 @@ public class MainRun {
 	                return null;
 	            }       
 	        return Rs;
-	        }
+	  }
 
 	
 }
