@@ -49,7 +49,18 @@ public class ShuffleTestCall implements Callable<HashMap<String, Multimap<String
 				}
 			}
 			
-			for (String runSeed : allSeeds){
+			HashSet<String> filteredSeeds = new HashSet<String>();
+			
+			for (int i=0; i<network.size(); i++){
+				if (allSeeds.contains(network.get(i)[0])){
+					filteredSeeds.add(network.get(i)[0]);
+				}
+				if (allSeeds.contains(network.get(i)[1])){
+					filteredSeeds.add(network.get(i)[1]);
+				}
+			}
+			
+			for (String runSeed : filteredSeeds){
 				Multimap<String, Double> oneResult = testSeed(ha, runSeed);
 				rt.put(runSeed, oneResult);
 			}

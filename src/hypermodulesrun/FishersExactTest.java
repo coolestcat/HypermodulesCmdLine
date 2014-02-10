@@ -108,28 +108,35 @@ public class FishersExactTest {
         		System.out.println(sampleSize);
         		System.out.println(sampleSuccesses);
         	*/
+        	try{
                 if (sampleSuccesses != 0 && sampleSuccesses != sampleSize) {
-                        jsc.contingencytables.FishersExactTest fet = new jsc.contingencytables.FishersExactTest(ct, alternative);
-                        return fet.getSP();
-                } else {
-                        if (alternative == H1.LESS_THAN) {
-                                Hypergeometric hg = new Hypergeometric(sampleSize, populationSize, totalSuccesses);
-                                return hg.pdf(sampleSuccesses);
-                        } else if(alternative == H1.GREATER_THAN){
-                                return 1.0;
-                        } else {
-                                Hypergeometric hg = new Hypergeometric(sampleSize, populationSize, totalSuccesses);
-                                double p0 = hg.pdf(sampleSuccesses);
-                                double sum = p0;
-                                for(int i=1;i<=sampleSize;i++){
-                                        double pI = hg.pdf(i);
-                                        if(pI<=p0){
-                                                sum+=pI;
-                                        }
-                                }
-                                return sum;
-                        }
-                }
+                    jsc.contingencytables.FishersExactTest fet = new jsc.contingencytables.FishersExactTest(ct, alternative);
+                    return fet.getSP();
+            } else {
+                    if (alternative == H1.LESS_THAN) {
+                            Hypergeometric hg = new Hypergeometric(sampleSize, populationSize, totalSuccesses);
+                            return hg.pdf(sampleSuccesses);
+                    } else if(alternative == H1.GREATER_THAN){
+                            return 1.0;
+                    } else {
+                            Hypergeometric hg = new Hypergeometric(sampleSize, populationSize, totalSuccesses);
+                            double p0 = hg.pdf(sampleSuccesses);
+                            double sum = p0;
+                            for(int i=1;i<=sampleSize;i++){
+                                    double pI = hg.pdf(i);
+                                    if(pI<=p0){
+                                            sum+=pI;
+                                    }
+                            }
+                            return sum;
+                    }
+            }
+        		
+        	}
+        	catch (Exception e){
+        		return 1.0;
+        	}
+
 
         }
 

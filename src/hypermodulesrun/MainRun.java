@@ -28,6 +28,7 @@ public class MainRun {
 			String stat = "logrank";
 			double pValueCutoff = 0.05;
 			int numberCores = Runtime.getRuntime().availableProcessors();
+			boolean hasHeaders = false;
 			//System.err.println(numberCores);
 			
 			/*
@@ -69,6 +70,18 @@ public class MainRun {
 							case 't':
 								stat = args[i+1];
 								break;
+							case 'H':
+								if (args[i+1].equals("Y")){
+									hasHeaders = true;
+								}
+								else if (args[i+1].equals("N")){
+									hasHeaders = false;
+								}
+								else{
+									printManual();
+									return;
+								}
+								break;
 							case 'C':
 								numberCores = Integer.valueOf(args[i+1]);
 								break;
@@ -109,8 +122,17 @@ public class MainRun {
 			}
 			
 			
+			if (sampleValues!=null && clinicalValues!=null){
+				if (hasHeaders == true){
+					sampleValues.remove(0);
+					clinicalValues.remove(0);
+				}
+			}
+			
+			
 			if (sampleValues!=null){
 				handleSampleValues(sampleValues);
+				
 			}
 			
 			if (stat.equals("logrank")){
@@ -126,8 +148,10 @@ public class MainRun {
 				}
 			}
 			
-			
-			if (network!=null && sampleValues!=null && clinicalValues!=null){
+			if (network!=null && sampleValues!=null && clinicalValues!=null){	
+				
+
+				
 				AlgorithmTask at = new AlgorithmTask(network, sampleValues, clinicalValues, shuffleNumber, stat, pValueCutoff, numberCores);
 				at.run();
 			}
@@ -225,6 +249,7 @@ public class MainRun {
 		System.out.println("\t-C \t The number of cores allocated to HyperModules. By default, this is set to all available cores at runtime.");
 		System.out.println("\t-S \t The number of background permutations. By default, this is set to 1000.");
 		System.out.println("\t-p \t The p-value cutoff for significance. By default, this is set to 0.05");
+		System.out.println("\t-H \t Y for headers, N for no headers");
 		System.out.println("\t-h \t Prints the manual.");
 		System.out.println();
 		System.out.println("Please consult baderlab.org/Software/HyperModules for more information.");

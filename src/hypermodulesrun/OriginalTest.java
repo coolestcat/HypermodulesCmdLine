@@ -35,7 +35,7 @@ public class OriginalTest{
 		HashMap<String, HashMap<String, Double>> rt = new HashMap<String, HashMap<String, Double>>();
 		HypermodulesHeuristicAlgorithm ha = new HypermodulesHeuristicAlgorithm(this.stat, this.sampleValues, this.clinicalValues, this.network);
 		ha.initialize();
-
+		
 		HashSet<String> allSeeds = new HashSet<String>();
 		for (int i=0; i<sampleValues.size(); i++){
 			if (!sampleValues.get(i)[1].equals("no_sample") && sampleValues.get(i)[1]!=null){
@@ -43,9 +43,22 @@ public class OriginalTest{
 			}
 		}
 		
-		System.err.println("Number of Seeds: " + allSeeds.size());
+		HashSet<String> filteredSeeds = new HashSet<String>();
+		
+		for (int i=0; i<network.size(); i++){
+			if (allSeeds.contains(network.get(i)[0])){
+				filteredSeeds.add(network.get(i)[0]);
+			}
+			if (allSeeds.contains(network.get(i)[1])){
+				filteredSeeds.add(network.get(i)[1]);
+			}
+		}
+		
+		//TODO: Forgot if network.contains(allSeeds.get(i))
+		
+		System.err.println("Number of Seeds: " + filteredSeeds.size());
 			
-		for (String runSeed : allSeeds){
+		for (String runSeed : filteredSeeds){
 			HashMap<String, Double> oneResult = testSeed(ha, runSeed);
 			rt.put(runSeed, oneResult);		
 		}
