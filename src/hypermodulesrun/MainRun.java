@@ -26,6 +26,7 @@ public class MainRun {
 			ArrayList<String[]> clinicalValues = null;
 			int shuffleNumber = 1000;
 			String stat = "logrank";
+			String foregroundvariable = null;
 			double pValueCutoff = 0.05;
 			int numberCores = Runtime.getRuntime().availableProcessors();
 			boolean hasHeaders = false;
@@ -69,6 +70,9 @@ public class MainRun {
 								break;
 							case 't':
 								stat = args[i+1];
+								break;
+							case 'f':
+								foregroundvariable = args[i+1];
 								break;
 							case 'H':
 								if (args[i+1].equals("Y")){
@@ -150,9 +154,10 @@ public class MainRun {
 			
 			if (network!=null && sampleValues!=null && clinicalValues!=null){	
 				
-
-				
-				AlgorithmTask at = new AlgorithmTask(network, sampleValues, clinicalValues, shuffleNumber, stat, pValueCutoff, numberCores);
+				if (foregroundvariable == null){
+					foregroundvariable = clinicalValues.get(0)[1];
+				}
+				AlgorithmTask at = new AlgorithmTask(network, sampleValues, clinicalValues, shuffleNumber, stat, foregroundvariable, pValueCutoff, numberCores);
 				at.run();
 			}
 			else{
@@ -222,7 +227,7 @@ public class MainRun {
 				}
 			}
 
-			if (variables.size() > 5){
+			if (variables.size() > 20){
 				System.err.println("INPUT ERROR: Please pick a clinical variable with fewer categories");
 				return false;
 			}
@@ -250,6 +255,7 @@ public class MainRun {
 		System.out.println("\t-S \t The number of background permutations. By default, this is set to 1000.");
 		System.out.println("\t-p \t The p-value cutoff for significance. By default, this is set to 0.05");
 		System.out.println("\t-H \t Y for headers, N for no headers");
+		System.out.println("\t-f \t The clinical variable you want to set as the foreground");
 		System.out.println("\t-h \t Prints the manual.");
 		System.out.println();
 		System.out.println("Please consult baderlab.org/Software/HyperModules for more information.");

@@ -16,24 +16,27 @@ public class OriginalTest{
 	
 	private int shuffleNumber;
 	private String stat;
+	private String foregroundvariable;
 	
 	
 	public OriginalTest(ArrayList<String[]> network, 
 			 			ArrayList<String[]> sampleValues, 
 			 			ArrayList<String[]> clinicalValues,
 			 			int shuffleNumber,
-			 			String stat){
+			 			String stat,
+			 			String foregroundvariable){
 		
 		this.network = network;
 		this.sampleValues = sampleValues;
 		this.shuffleNumber = shuffleNumber;
 		this.clinicalValues = clinicalValues;
 		this.stat = stat;
+		this.foregroundvariable = foregroundvariable;
 	}
 	
 	public HashMap<String, HashMap<String, Double>> callTest(){
 		HashMap<String, HashMap<String, Double>> rt = new HashMap<String, HashMap<String, Double>>();
-		HypermodulesHeuristicAlgorithm ha = new HypermodulesHeuristicAlgorithm(this.stat, this.sampleValues, this.clinicalValues, this.network);
+		HypermodulesHeuristicAlgorithm ha = new HypermodulesHeuristicAlgorithm(this.stat, this.foregroundvariable, this.sampleValues, this.clinicalValues, this.network);
 		ha.initialize();
 		
 		HashSet<String> allSeeds = new HashSet<String>();
@@ -90,7 +93,7 @@ public class OriginalTest{
 	
 	public HashMap<String, HashMap<String, Double>> testHighOrLow(HashMap<String, HashMap<String, Double>> ot){
 		HashMap<String, HashMap<String, Double>> rt = new HashMap<String, HashMap<String, Double>>();
-		HypermodulesHeuristicAlgorithm ha = new HypermodulesHeuristicAlgorithm(this.stat, this.sampleValues, this.clinicalValues, this.network);
+		HypermodulesHeuristicAlgorithm ha = new HypermodulesHeuristicAlgorithm(this.stat, this.foregroundvariable, this.sampleValues, this.clinicalValues, this.network);
 		ha.initialize();
 		for (String s : ot.keySet()){
 			HashMap<String, Double> newMap = new HashMap<String, Double>();

@@ -20,25 +20,28 @@ public class ProgressBarShuffle implements Callable<HashMap<String, Multimap<Str
 	
 	private int shuffleNumber;
 	private String stat;
+	private String foregroundvariable;
 
 	
 	public ProgressBarShuffle(ArrayList<String[]> network, 
 			 			ArrayList<String[]> sampleValues, 
 			 			ArrayList<String[]> clinicalValues,
 			 			int shuffleNumber,
-			 			String stat){
+			 			String stat,
+			 			String foregroundvariable){
 		
 		this.network = network;
 		this.sampleValues = sampleValues;
 		this.shuffleNumber = shuffleNumber;
 		this.clinicalValues = clinicalValues;
 		this.stat = stat;
+		this.foregroundvariable = foregroundvariable;
 	}
 
 
 	public HashMap<String, Multimap<String, Double>> call() throws Exception {
 		HashMap<String, Multimap<String, Double>> rt = new HashMap<String, Multimap<String, Double>>();
-		HypermodulesHeuristicAlgorithm ha = new HypermodulesHeuristicAlgorithm(this.stat, this.sampleValues, this.clinicalValues, this.network);
+		HypermodulesHeuristicAlgorithm ha = new HypermodulesHeuristicAlgorithm(this.stat,this.foregroundvariable, this.sampleValues, this.clinicalValues, this.network);
 		ha.initialize();
 
 		

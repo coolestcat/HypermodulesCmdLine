@@ -55,6 +55,12 @@ public class AlgorithmTask implements Runnable {
 	private ArrayList<String[]> filteredSampleValues;
 	private ArrayList<String[]> clinicalValues;
 	
+	private Multimap<String, String> sampleValueHash;
+	private HashMap<String, String> patientListHash;
+	
+	
+	private String foregroundvariable;
+	
 	private int shuffleNumber;
 
 	private String stat;
@@ -68,6 +74,7 @@ public class AlgorithmTask implements Runnable {
 						 ArrayList<String[]> clinicalValues,
 						 int shuffleNumber, 
 						 String stat,
+						 String foregroundvariable,
 						 double pValueCutoff,
 						 int numberCores){
 		
@@ -75,8 +82,15 @@ public class AlgorithmTask implements Runnable {
 		this.sampleValues = sampleValues;
 		this.shuffleNumber = shuffleNumber;
 		this.stat = stat;
+		this.foregroundvariable = foregroundvariable;
 		this.pValueCutoff = pValueCutoff;
 		this.numberCores = numberCores;
+		
+		this.sampleValueHash = ArrayListMultimap.create();
+		for (int i=0; i<sampleValues.size(); i++){
+			sampleValueHash.put(sampleValues.get(i)[0], sampleValues.get(i)[1]);
+		}
+
 		
 		if (stat.toUpperCase().equals("LOGRANK")){
 			
@@ -142,7 +156,7 @@ public class AlgorithmTask implements Runnable {
 	public void run() {
 		long before = System.nanoTime();
 		System.err.println("Running Original Test...");
-		OriginalTest ot = new OriginalTest(network, sampleValues, clinicalValues, shuffleNumber, stat);
+		OriginalTest ot = new OriginalTest(network, sampleValues, clinicalValues, shuffleNumber, stat, foregroundvariable);
 		this.originalResults = ot.callTest();
 		fixOriginalResults();
 		
@@ -163,13 +177,13 @@ public class AlgorithmTask implements Runnable {
 		
 		for (int i=0; i<nCores-1; i++){
 			//reinitializeVariables();
-			ShuffleTestCall st = new ShuffleTestCall(this.network, this.sampleValues, this.clinicalValues, (int) shuffleNumber/nCores, this.stat);
+			ShuffleTestCall st = new ShuffleTestCall(this.network, this.sampleValues, this.clinicalValues, (int) shuffleNumber/nCores, this.stat, this.foregroundvariable);
 			Future<HashMap<String, Multimap<String, Double>>> submitPool = executor.submit(st);
 			list.add(submitPool);
 			shuffleCount += (int) shuffleNumber/nCores;
 		}
 		
-		ProgressBarShuffle st = new ProgressBarShuffle(this.network, this.sampleValues, this.clinicalValues, (int) (shuffleNumber - shuffleCount), this.stat);
+		ProgressBarShuffle st = new ProgressBarShuffle(this.network, this.sampleValues, this.clinicalValues, (int) (shuffleNumber - shuffleCount), this.stat, this.foregroundvariable);
 		Future<HashMap<String, Multimap<String, Double>>> submitPool = executor.submit(st);
 		list.add(submitPool);
 		
@@ -253,6 +267,19 @@ public class AlgorithmTask implements Runnable {
 		HashMap<String, Double> mostCorrelatedFDR = a.get(1);
 		HashMap<String, Double> mostCorrelatedPatn = a.get(2);
 		HashMap<String, Double> mostCorrelatedOddsRatio = a.get(3);
+	
+		
+		this.patientListHash = new HashMap<String, String>();
+		
+		for (String s : allResults.keySet()){
+			for (ArrayList<HashMap<String, Double>> ahsd : allResults.get(s).keySet()){
+				HashMap<String, Double> one = ahsd.get(0);
+				for (String t : one.keySet()){
+					this.patientListHash.put(t, getPatientList(t));
+				}
+			}
+		}
+		
 		
 		System.out.println("# HyperModules Results");
 		System.out.println("# Date: " + '\t' + DateFormat.getDateTimeInstance().format(new Date()));
@@ -261,9 +288,37 @@ public class AlgorithmTask implements Runnable {
 		System.out.println("# Statistical Test: " + '\t'+ stat );
 		System.out.println();
 		
-		System.out.println("Module" + '\t' + "Pvalue_test" + '\t' + "Pvalue_background"  + '\t' + "Number_patients" + '\t' + "Log_odds_ratio" );
+		System.out.println("Seed" + '\t' + "Module" + '\t' + "Pvalue_test" + '\t' + "Pvalue_background"  + '\t' + "Number_patients" + '\t' + "Log_odds_ratio" + '\t' + "List_of_patients");
 		for (String s : mostCorrelated.keySet()){
-			System.out.println(s + '\t' + mostCorrelated.get(s) + '\t' + mostCorrelatedFDR.get(s) + '\t' + mostCorrelatedPatn.get(s) + '\t' + mostCorrelatedOddsRatio.get(s));
+			String[] t = s.split(":");
+			String seed = t[0];
+			ArrayList<String> toSort = new ArrayList<String>();
+			
+			for (int i=0; i<t.length; i++){
+				toSort.add(t[i]);
+			}
+			
+			Collections.sort(toSort);
+			String k = toSort.get(0);
+			for (int i=1; i<toSort.size(); i++){
+				k = k + ";" + toSort.get(i);
+			}
+
+			String c = "";
+			if (mostCorrelatedOddsRatio.get(s).equals(Double.NEGATIVE_INFINITY)){
+				c = "-Infinity";
+			}
+			else if (mostCorrelatedOddsRatio.get(s).equals(Double.POSITIVE_INFINITY)){
+				c = "Infinity";
+			}
+			else if (Double.isNaN(mostCorrelatedOddsRatio.get(s))){
+				c = "NaN";
+			}
+			else{
+				c = String.valueOf(mostCorrelatedOddsRatio.get(s));
+			}	
+			
+			System.out.println(seed + '\t' + k + '\t' + mostCorrelated.get(s) + '\t' + mostCorrelatedFDR.get(s) + '\t' + (int) (double) mostCorrelatedPatn.get(s) + '\t' + c + '\t' + patientListHash.get(s));
 		}
 	}
 	
@@ -502,8 +557,7 @@ public class AlgorithmTask implements Runnable {
 			//System.out.println(y);
 		}
 		
-		System.out.println("rejectedlist size:"  + rejectedList.size());
-		System.out.println("finished creating rejection list");
+		System.out.println("Redundant Modules Filtered: "  + rejectedList.size());
 		
 		for (String s : input.keySet()){
 			//output.put(s, input.get(s));
@@ -531,49 +585,28 @@ public class AlgorithmTask implements Runnable {
 					}
 				}
 				
+				HashMap<String, Double> patn = new HashMap<String, Double>();
+				for (String x : neworig.keySet()){
+					patn.put(x, (double) getNumPatients(x));
+				}
+				
+				HashMap<String, Double> oddsratio = new HashMap<String, Double>();
 				if (this.stat.equals("logRank")){
-					HashMap<String, Double> clas = ahsd.get(2);
-					HashMap<String, Double> newclas = new HashMap<String, Double>();
-					for (String o : clas.keySet()){
-						if (!rejectedList.contains(o)){
-							newclas.put(seedAtBeginning(s, o), roundToSignificantFigures(clas.get(o),5));
-						}
-					}
-					
-					HashMap<String, Double> patn = new HashMap<String, Double>();
-					for (String x : neworig.keySet()){
-						patn.put(x, (double) getNumPatients(x));
-					}
-					
-					HashMap<String, Double> oddsratio = new HashMap<String, Double>();
 					for (String x : neworig.keySet()){
 						oddsratio.put(x, roundToSignificantFigures(getRatioLogRank(x), 5));
 					}
-					
-					newahsd.add(neworig);
-					newahsd.add(newadj);
-					newahsd.add(newclas);
-					newahsd.add(patn);
-					newahsd.add(oddsratio);
-
 				}
 				else{
-					HashMap<String, Double> patn = new HashMap<String, Double>();
-					for (String x : neworig.keySet()){
-						patn.put(x, (double) getNumPatients(x));
-					}
-					
-					HashMap<String, Double> oddsratio = new HashMap<String, Double>();
 					for (String x : neworig.keySet()){
 						oddsratio.put(x, roundToSignificantFigures(getRatioFisher(x), 5));
 					}
-					
-					newahsd.add(neworig);
-					newahsd.add(newadj);
-					newahsd.add(patn);
-					newahsd.add(oddsratio);
-				
 				}
+
+					
+				newahsd.add(neworig);
+				newahsd.add(newadj);
+				newahsd.add(patn);
+				newahsd.add(oddsratio);
 				
 				hah.put(newahsd, inputhah.get(ahsd));
 			}
@@ -588,10 +621,12 @@ public class AlgorithmTask implements Runnable {
 		return output;
 	}
 	
-	
 	public static double roundToSignificantFigures(double num, int n) {
-		if (Double.isNaN(num) || Double.isInfinite(num)){
+		if (Double.isNaN(num)){
 			return Double.NaN;
+		}
+		if (Double.isInfinite(num)){
+			return num;
 		}
 		
 	    if(num == 0) {
@@ -605,7 +640,6 @@ public class AlgorithmTask implements Runnable {
 	    final long shifted = Math.round(num*magnitude);
 	    return shifted/magnitude;
 	}
-	
 	
 	public String seedAtBeginning(String s, String t){
 		if (t.equals("none")){
@@ -682,6 +716,37 @@ public class AlgorithmTask implements Runnable {
 	}
 	
 	
+	public String getPatientList(String genes){
+		String ret = "";
+		String[] t = genes.split(":");
+		HashSet<String> pats = new HashSet<String>();
+		for (int i=0; i<t.length; i++){
+			for (String s : sampleValueHash.get(t[i])){
+				if (!s.equals("no_sample")){
+					pats.add(s);
+				}
+			}	
+		}
+		
+		ArrayList<String> as = new ArrayList<String>();
+		for (String s : pats){
+			as.add(s);
+		}
+		
+		Collections.sort(as);
+		
+		for (int i=0; i<as.size(); i++){
+			ret = ret + as.get(i) + ",";
+		}
+		
+		if (ret.length()>0){
+			if (ret.charAt(ret.length()-1)==','){
+				ret = ret.substring(0, ret.length()-1);
+			}
+		}
+
+		return ret;
+	}
 	public int getNumPatients(String genes){
 		int result = 0;
 		String[] splitted = genes.split(":");
@@ -693,7 +758,7 @@ public class AlgorithmTask implements Runnable {
 		HashSet<String> patients = new HashSet<String>();
 		for (int i=0; i<filteredSampleValues.size(); i++){
 			if (checker.contains(filteredSampleValues.get(i)[0])){
-				if (filteredSampleValues.get(i)[1]!="no_sample"){
+				if (!filteredSampleValues.get(i)[1].equals("no_sample")){
 					patients.add(filteredSampleValues.get(i)[1]);
 				}
 
@@ -716,17 +781,37 @@ public class AlgorithmTask implements Runnable {
 		
 		
 		HashSet<String> inModulePatients = new HashSet<String>();
-		HashSet<String> outOfModulePatients = new HashSet<String>();
 		
 		for (int i=0; i<filteredSampleValues.size(); i++){
 			if (gs.contains(filteredSampleValues.get(i)[0])){
 				inModulePatients.add(filteredSampleValues.get(i)[1]);
 			}
+		}
+		
+		
+		ArrayList<Double> inModuleFollowup = new ArrayList<Double>();
+		ArrayList<Double> outOfModuleFollowup = new ArrayList<Double>();
+		
+		for (int i=0; i<clinicalValues.size(); i++){
+			if (inModulePatients.contains(clinicalValues.get(i)[0])){
+				inModuleFollowup.add(Double.valueOf(clinicalValues.get(i)[2]));
+			}
 			else{
-				outOfModulePatients.add(filteredSampleValues.get(i)[1]);
+				outOfModuleFollowup.add(Double.valueOf(clinicalValues.get(i)[2]));
 			}
 		}
 		
+		if (inModuleFollowup.size()>0){
+			double p1 = inModuleFollowup.get(inModuleFollowup.size()/2);
+			double p2 = outOfModuleFollowup.get(outOfModuleFollowup.size()/2);
+			return Math.log(p1/(double)p2);
+		}
+		else{
+			return Double.NaN;
+		}
+
+		
+		/*
 		int inModuleVar1 = 0;
 		int outOfModuleVar1 = 0;
 		
@@ -757,6 +842,8 @@ public class AlgorithmTask implements Runnable {
 			
 		}
 		
+		
+		
 		double p1 = inModuleVar1/ (double) inModulePatients.size();
 		double p2 = outOfModuleVar1/ (double) outOfModulePatients.size();
 		double rvalue = p1*(1-p2)/(double) (p2*(1-p1));
@@ -766,17 +853,18 @@ public class AlgorithmTask implements Runnable {
 			rvalue = Math.log(rvalue);
 		}
 		return rvalue;
+		*/
+		
 		
 		
 	}
-	
 
 	
 	//variable 1 is the first one to appear in otherValues
 	public double getRatioFisher(String genes){
 		String[] g = genes.split(":");
 		
-		String v1 = clinicalValues.get(0)[1];
+		String v1 = foregroundvariable;
 		
 		HashSet<String> gs = new HashSet<String>();
 		for (int i=0; i<g.length; i++){
@@ -819,8 +907,14 @@ public class AlgorithmTask implements Runnable {
 		if (!Double.isNaN(rvalue) && !Double.isInfinite(rvalue)){
 			rvalue = Math.log(rvalue);
 		}
-
-	
+		if (p1 == 0){
+			//rvalue = Double.NEGATIVE_INFINITY;
+			rvalue = -1000.0;
+		}
+		if (p1 == 1){
+			//rvalue = Double.POSITIVE_INFINITY;
+			rvalue = 1000.0;
+		}
 		return rvalue;
 	}
 	

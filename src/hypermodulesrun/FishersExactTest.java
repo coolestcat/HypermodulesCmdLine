@@ -11,7 +11,7 @@ public class FishersExactTest {
         private int sampleSize;
         private int sampleSuccesses;
         private ContingencyTable2x2 ct;
-        private H1 alternative = H1.NOT_EQUAL;
+        private H1 alternative = H1.LESS_THAN;
         private static final int OVERREP = 1;
         private static final int UNDERREP = -1;
         private static final int NOREP = 0;

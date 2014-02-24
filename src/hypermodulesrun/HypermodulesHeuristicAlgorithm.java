@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import jsc.contingencytables.ContingencyTable2x2;
-import jsc.contingencytables.FishersExactTest;
 
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
@@ -47,11 +46,13 @@ public class HypermodulesHeuristicAlgorithm {
 	//getAllPaths
 	private Multimap<String, String> networkInteractions;
 	
-	public HypermodulesHeuristicAlgorithm(String stat, 
+	private String foregroundvariable;
+	
+	public HypermodulesHeuristicAlgorithm(String stat, String foregroundvariable,
 				ArrayList<String[]> sampleValues, 
 				ArrayList<String[]> clinicalValues, 
 				ArrayList<String[]> network){
-		
+		this.foregroundvariable = foregroundvariable;
 		this.stat = stat;
 		this.sampleValues = sampleValues;
 		this.clinicalValues = clinicalValues;
@@ -70,12 +71,12 @@ public class HypermodulesHeuristicAlgorithm {
 				initClinicalsFisher();
 			}
 			else{
-				System.out.println("Please enter either LOGRANK or FISHER as the statistical test.");
+				System.err.println("Please enter either LOGRANK or FISHER as the statistical test.");
 				System.exit(0);
 			}
 		}
 		catch(Exception e){
-			System.out.println("Please enter path to a valid input file for the statistical test selected!");
+			System.err.println("Please enter path to a valid input file for the statistical test selected!");
 			System.exit(0);
 		}
 
@@ -168,7 +169,7 @@ public class HypermodulesHeuristicAlgorithm {
 			if (!clinicalSamples.contains(s)){
 				for (String z : memoryone.get(s)){
 					allGeneSamplesMap.put(z, "no_sample");
-					System.out.println("The sample " + s + " was not found in your clinical table. All genes corresponding to " + s + " are now assumed to have no sample.");
+					System.err.println("The sample " + s + " was not found in your clinical table. All genes corresponding to " + s + " are now assumed to have no sample.");
 				}
 			}
 		}
@@ -504,6 +505,7 @@ public class HypermodulesHeuristicAlgorithm {
 	
 	public Double testModuleFisher(String thisNetwork, int limit){
 
+		
 		String[] genes = thisNetwork.split(":");
 		
 		ArrayList<String> patients = new ArrayList<String>();
@@ -538,7 +540,23 @@ public class HypermodulesHeuristicAlgorithm {
 			return null;
 		}
 		
+		int c = 0;
+		int matrix00 = 0;
+		for (int k=0; k<this.clinicalValues.size(); k++){
+			if (var2patients[k] == true){
+				if (this.clinicalValues.get(k)[1].equals(this.foregroundvariable)){
+					matrix00++;
+				}
+			}
+			if (this.clinicalValues.get(k)[1].equals(this.foregroundvariable)){
+				c++;
+			}
+		}
+
+		FishersExactTest fet = new FishersExactTest(clinicalValues.size(), c, alpha, matrix00);
+		return fet.getResult();
 		
+		/*
 		int[][] matrix = new int[clinicalVariableHash.size()][2];
 		
 		for (int i=0; i<matrix.length; i++){
@@ -547,7 +565,7 @@ public class HypermodulesHeuristicAlgorithm {
 			}
 		}
 		
-		for (int k=0; k<clinicalValues.size(); k++){
+		for (int k=0; k<otherValues.size(); k++){
 			if (var2patients[k]==true){
 				for (int i=0; i<hashArray.size(); i++){
 					if (clinicalVariableMap.get(otherPatients[k]).equals(hashArray.get(i))){
@@ -563,33 +581,24 @@ public class HypermodulesHeuristicAlgorithm {
 				}
 			}
 		}
-		
-		/*
-		if (clinicalVariableHash.size()==2){
-			ContingencyTable2x2 ct = new ContingencyTable2x2(matrix);
-			FishersExactTest fet = new FishersExactTest(ct);
-			return fet.getApproxSP();
+		int c = 0;
+		for (int i=0; i<otherValues.size(); i++){
+			if (otherValues.get(i)[1].equals(hashArray.get(0))){
+				c++;
+			}
 		}
+		
+		
+		if (clinicalVariableHash.size()==2){
+			org.cytoscape.hypermodules.internal.statistics.FishersExactTest fet = new org.cytoscape.hypermodules.internal.statistics.FishersExactTest(otherValues.size(), c, alpha, matrix[0][0]);
+			return fet.getResult();
+		}
+			
 		else{
 			FishersExact fe = new FishersExact(matrix);
 			return fe.fisher2c();
 		}
 		*/
-		int c = 0;
-		for (int i=0; i<clinicalValues.size(); i++){
-			if (clinicalValues.get(i)[1].equals(hashArray.get(0))){
-				c++;
-			}
-		}
-		
-		if (clinicalVariableHash.size()==2){
-			hypermodulesrun.FishersExactTest fet = new hypermodulesrun.FishersExactTest(clinicalValues.size(), c, alpha, matrix[0][0]);
-			return fet.getResult();
-		}
-		else{
-			FishersExact fe = new FishersExact(matrix);
-			return fe.fisher2c();
-		}
 	}
 	
 	public Double testModuleClinical(String thisNetwork, int limit, boolean flag){
