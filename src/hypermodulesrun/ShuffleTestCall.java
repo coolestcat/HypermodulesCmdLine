@@ -62,7 +62,7 @@ public class ShuffleTestCall implements Callable<HashMap<String, Multimap<String
 					filteredSeeds.add(network.get(i)[1]);
 				}
 			}
-			
+				
 			for (String runSeed : filteredSeeds){
 				Multimap<String, Double> oneResult = testSeed(ha, runSeed);
 				rt.put(runSeed, oneResult);

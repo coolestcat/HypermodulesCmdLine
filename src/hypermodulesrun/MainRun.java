@@ -21,6 +21,7 @@ public class MainRun {
 			System.out.println("USAGE: java -jar [*.jar] [PATH_TO_NETWORK_INTERACTIONS] [PATH_TO_SAMPLE_VALUES] [PATH_TO_CLINICAL_VALUES] [SHUFFLE_NUMBER] [STAT_TEST]");
 		}
 		*/
+		
 			ArrayList<String[]> network = null;
 			ArrayList<String[]> sampleValues = null;
 			ArrayList<String[]> clinicalValues = null;
@@ -153,9 +154,9 @@ public class MainRun {
 			}
 			
 			if (network!=null && sampleValues!=null && clinicalValues!=null){	
-				
-				if (foregroundvariable == null){
-					foregroundvariable = clinicalValues.get(0)[1];
+				if (foregroundvariable == null && stat.equals("fisher")){
+					System.err.println("Please enter a value to test.");
+					return;
 				}
 				AlgorithmTask at = new AlgorithmTask(network, sampleValues, clinicalValues, shuffleNumber, stat, foregroundvariable, pValueCutoff, numberCores);
 				at.run();

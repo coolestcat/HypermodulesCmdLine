@@ -57,14 +57,15 @@ public class OriginalTest{
 			}
 		}
 		
-		//TODO: Forgot if network.contains(allSeeds.get(i))
-		
 		System.err.println("Number of Seeds: " + filteredSeeds.size());
-			
+		
+		
 		for (String runSeed : filteredSeeds){
 			HashMap<String, Double> oneResult = testSeed(ha, runSeed);
 			rt.put(runSeed, oneResult);		
 		}
+		
+		
 		System.err.println("Finished Running Original Test.");
 		System.err.println("Finished Analyzing Original Network");
 		
@@ -79,8 +80,8 @@ public class OriginalTest{
 		
 		//System.out.println("ALL PATHS SIZE: " + allPaths.size());
 		
-		
 		ArrayList<String> compress = ha.compressTokens(allPaths, seedName);
+
 		
 		//System.out.println("COMPRESSED SIZE: " + compress.size());
 		

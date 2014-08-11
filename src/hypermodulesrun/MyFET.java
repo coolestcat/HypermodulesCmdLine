@@ -1,21 +1,23 @@
 package hypermodulesrun;
 
 import jsc.contingencytables.ContingencyTable2x2;
+import jsc.contingencytables.FishersExactTest;
 import jsc.tests.H1;
 import jsc.distributions.Hypergeometric;
 
-public class FishersExactTest {
+public class MyFET{
 
         private int populationSize;
         private int totalSuccesses;
         private int sampleSize;
         private int sampleSuccesses;
         private ContingencyTable2x2 ct;
-        private H1 alternative = H1.LESS_THAN;
+        private H1 alternative = H1.GREATER_THAN;
         private static final int OVERREP = 1;
         private static final int UNDERREP = -1;
         private static final int NOREP = 0;
         private int representation;
+        private int[][] data;
 
         /**
          * A two-tailed Fisher's exact test. Use the getResult() method to get the
@@ -32,16 +34,23 @@ public class FishersExactTest {
          *            The total number of "successes" within the sample that meet
          *            the given criteria.
          */
-        public FishersExactTest(int populationSize, int totalSuccesses, int sampleSize, int sampleSuccesses) {
+        public MyFET(int populationSize, int totalSuccesses, int sampleSize, int sampleSuccesses) {
                 try {
-                        setVariables(populationSize, totalSuccesses, sampleSize, sampleSuccesses);
+            		//TODO: erase this.
+                	/*
+                	this.populationSize = 40;
+                	this.totalSuccesses = 22;
+                	this.sampleSize = 27;
+                	this.sampleSuccesses = 16;
+                	*/
+                        setVariables(populationSize,totalSuccesses,sampleSize,sampleSuccesses);
                 } catch (SillyInputException e) {
                         System.out.println(e.toString());
                         e.printStackTrace();
                 }
         }
 
-        public FishersExactTest(int populationSize, int totalSuccesses, int sampleSize, int sampleSuccesses, H1 alternative) {
+        public MyFET(int populationSize, int totalSuccesses, int sampleSize, int sampleSuccesses, H1 alternative) {
                 try {
                         this.alternative = alternative;
                         setVariables(populationSize, totalSuccesses, sampleSize, sampleSuccesses);
@@ -83,7 +92,7 @@ public class FishersExactTest {
                         representation = NOREP;
                 }
 
-                int[][] data = new int[2][2];
+                data = new int[2][2];
                 data[0][0] = sampleSuccesses;
                 data[0][1] = sampleSize - sampleSuccesses;
                 data[1][0] = totalSuccesses - sampleSuccesses;
@@ -95,50 +104,60 @@ public class FishersExactTest {
         public int getRepresentation() {
                 return representation;
         }
-
+        
         /**
          * Get the results of the test
          * 
-         * @return The results of the two-tailed Fishers exact test.
+         * @return The results of the one-tailed Fishers exact test//two-tailed Fishers exact test.
          */
         public double getResult() {
-        	/*
-        		System.out.println(populationSize);
-        		System.out.println(totalSuccesses);
-        		System.out.println(sampleSize);
-        		System.out.println(sampleSuccesses);
-        	*/
         	try{
-                if (sampleSuccesses != 0 && sampleSuccesses != sampleSize) {
-                    jsc.contingencytables.FishersExactTest fet = new jsc.contingencytables.FishersExactTest(ct, alternative);
-                    return fet.getSP();
-            } else {
-                    if (alternative == H1.LESS_THAN) {
-                            Hypergeometric hg = new Hypergeometric(sampleSize, populationSize, totalSuccesses);
-                            return hg.pdf(sampleSuccesses);
-                    } else if(alternative == H1.GREATER_THAN){
-                            return 1.0;
-                    } else {
-                            Hypergeometric hg = new Hypergeometric(sampleSize, populationSize, totalSuccesses);
-                            double p0 = hg.pdf(sampleSuccesses);
-                            double sum = p0;
-                            for(int i=1;i<=sampleSize;i++){
-                                    double pI = hg.pdf(i);
-                                    if(pI<=p0){
-                                            sum+=pI;
-                                    }
-                            }
-                            return sum;
-                    }
-            }
+        		double pval = 0;
+        		if (ct.getFrequency(0,0)!=0 && ct.getFrequency(1,1)!=0 &&
+        				ct.getFrequency(1,0)!=0 && ct.getFrequency(0,1)!=0) {
+        			FishersExactTest fet = new jsc.contingencytables.FishersExactTest(ct, H1.GREATER_THAN);
+        			pval = fet.getSP();
+        		} else {
+        			Hypergeometric hg = new Hypergeometric(sampleSize, populationSize, totalSuccesses);
+        			for (int ss=sampleSuccesses; ss<=Math.min(totalSuccesses, sampleSize); ss++) {
+        				pval += hg.pdf(ss);
+        			}
+            	}
         		
+        		//System.out.println(data[0][0] + " : " + data[0][1] + " : " + data[1][0] + " : " + data[1][1] + " : " + pval);
+        		return pval;
+
         	}
         	catch (Exception e){
         		return 1.0;
         	}
+        	finally{
+        		
+        	}
 
 
         }
+        
+        
+        public Double getLogOdds(){
+			double lodds1 = (ct.getFrequency(1,1)*ct.getFrequency(0,0));
+			double lodds2 = (ct.getFrequency(0,1)*ct.getFrequency(1,0));
+			
+			Double lodds = lodds1/lodds2;
+			
+			if (!lodds.isNaN() && !lodds.isInfinite()){
+				return Math.log(lodds);
+			}
+			if (lodds == Double.POSITIVE_INFINITY){
+				return 1000.0;
+			}
+			if (lodds == 0){
+				return -1000.0;
+			}
+			
+			return lodds;
+        }
+
 
         private boolean testNan(double d) {
                 if (Double.isNaN(d) || Double.isInfinite(d)) {

@@ -20,7 +20,6 @@ public class HypermodulesHeuristicAlgorithm {
 	private ArrayList<String[]> sampleValues;
 	private ArrayList<String[]> clinicalValues;
 	private ArrayList<String[]> network;
-	
 
 	//initClinicalsSurvival
 	private String[] allPatients;
@@ -59,7 +58,6 @@ public class HypermodulesHeuristicAlgorithm {
 		this.network = network;
 	}
 
-	
 	public void initialize(){
 		try{
 			if (this.stat.toUpperCase().equals("LOGRANK")){
@@ -187,6 +185,7 @@ public class HypermodulesHeuristicAlgorithm {
 		networkInteractions = ArrayListMultimap.create();
 		for (int i=0; i<this.network.size(); i++){
 			networkInteractions.put(this.network.get(i)[0], this.network.get(i)[1]);
+			networkInteractions.put(this.network.get(i)[1], this.network.get(i)[0]);
 		}
 		
 	}
@@ -257,13 +256,38 @@ public class HypermodulesHeuristicAlgorithm {
 	}
 
 	public HashSet<String> getAllPaths(String seed){
-		HashSet<String> allPaths = new HashSet<String>();
+		HashSet<HashSet<String>> set = new HashSet<HashSet<String>>();
+		
 		for (String s : networkInteractions.get(seed)){
 			for (String t : networkInteractions.get(s)){
-				allPaths.add(seed + ":" + s + ":" + t);
+				HashSet<String> thisPath = new HashSet<String>();
+				thisPath.add(t);
+				thisPath.add(s);
+				thisPath.add(seed);
+				
+				set.add(thisPath);
 			}
 		}
-		return allPaths;
+		
+		HashSet<String> ret = new HashSet<String>();
+		for (HashSet<String> setElement : set){
+			String allString = new String();
+			allString = "";
+			int i=0;
+			for (String element : setElement){
+				if (i==setElement.size()-1){
+				allString = allString + element;
+				}
+				else{
+				allString = allString + element + ":";
+				}
+				i++;
+			}
+			//System.out.println(allString);
+			ret.add(allString);
+		}
+			
+		return ret;
 	}
 	
 	public ArrayList<String> compressTokens(HashSet<String> allPaths, String seedName){
@@ -299,6 +323,19 @@ public class HypermodulesHeuristicAlgorithm {
 
 		return compress;
 	}
+	
+	public int getDegree(String s){
+		int deg = 0;
+
+		String[] genes = s.split(":");
+		for (int i=0; i<genes.length; i++){
+			int num = networkInteractions.get(genes[i]).size();
+			deg += num;
+		}
+		
+		return deg;
+	}
+	
 	
 	public HashMap<String, Double> mineHublets(ArrayList<String> compressedList){
 		
@@ -357,6 +394,8 @@ public class HypermodulesHeuristicAlgorithm {
     		String minKey = null;
     		Double minVal=Double.valueOf(2);
     		
+    		ArrayList<String> allMins = new ArrayList<String>();
+    		
     		for (String[] key6 : pairwise.keySet()){
     			//TODO: got rid of concatenate network... why does it still work?
     			key7 = key6[0] + ":" + key6[1];
@@ -373,10 +412,15 @@ public class HypermodulesHeuristicAlgorithm {
     			if (value7 < pairwise.get(key6)[0] && value7 < pairwise.get(key6)[1]){
         		pairwiseConcat.put(key7, value7);
         		pairwiseConcatMemory.put(key7, key6);
-        			if (value7<minVal){
-        				minVal = value7;
-        				minKey = key7;
-        			}
+    				if (value7<minVal){
+    					allMins = new ArrayList<String>();
+    					minVal = value7;
+    					minKey = key7;
+    					allMins.add(key7);
+    				}
+    				if (value7.equals(minVal)){
+    					allMins.add(key7);
+    				}
     			}
     			
     			/*
@@ -386,6 +430,26 @@ public class HypermodulesHeuristicAlgorithm {
     			}
     			*/
     		}
+    		
+    		
+    		
+    		Collections.sort(allMins);
+    		//BREAKING TIES:
+    		int minDegree = 0;
+    		if (allMins.size()>1){
+    			minKey = allMins.get(0);
+    			minDegree = getDegree(allMins.get(0));
+    			for (int i=0; i<allMins.size(); i++){
+    				if (!allMins.get(i).equals(minKey)){
+        				int thisDegree = getDegree(allMins.get(i));
+        				if (thisDegree < minDegree){
+        					minKey = allMins.get(i);
+        					minDegree = thisDegree;
+        				}
+    				}
+    			}
+    		}
+    		
 
     		if (pairwiseConcat.isEmpty()){
     			break;
@@ -553,7 +617,7 @@ public class HypermodulesHeuristicAlgorithm {
 			}
 		}
 
-		FishersExactTest fet = new FishersExactTest(clinicalValues.size(), c, alpha, matrix00);
+		MyFET fet = new MyFET(clinicalValues.size(), c, alpha, matrix00);
 		return fet.getResult();
 		
 		/*

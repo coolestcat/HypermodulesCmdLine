@@ -52,13 +52,28 @@ public class ProgressBarShuffle implements Callable<HashMap<String, Multimap<Str
 				}
 			}
 			
-			for (String runSeed : allSeeds){
+			HashSet<String> filteredSeeds = new HashSet<String>();
+			
+			for (int i=0; i<network.size(); i++){
+				if (allSeeds.contains(network.get(i)[0])){
+					filteredSeeds.add(network.get(i)[0]);
+				}
+				if (allSeeds.contains(network.get(i)[1])){
+					filteredSeeds.add(network.get(i)[1]);
+				}
+			}
+			
+			//System.out.println("DOTS PRINTED: " + filteredSeeds.size());
+			
+
+			
+			for (String runSeed : filteredSeeds){
 				System.err.print(".");
 				Multimap<String, Double> oneResult = testSeed(ha, runSeed);
 				rt.put(runSeed, oneResult);
 			}
 			
-			//System.out.println("finished running.");
+			
 			
 		return rt;
 	}
