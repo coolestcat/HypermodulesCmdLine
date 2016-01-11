@@ -137,7 +137,13 @@ public class MainRun {
 			
 			if (sampleValues!=null){
 				handleSampleValues(sampleValues);
-				
+			}
+			
+			if (sampleValues!=null && clinicalValues!=null){
+				if (!handlePatientMismatchException(clinicalValues, sampleValues)){
+					System.err.println("Enter java -jar *.jar -h for more information");
+					return;
+				}
 			}
 			
 			if (stat.equals("logrank")){
@@ -177,6 +183,32 @@ public class MainRun {
 		
 	}
 
+	public static boolean handlePatientMismatchException(ArrayList<String[]> clinicalValues, ArrayList<String[]> sampleValues){
+		boolean valid = true;
+		HashSet<String> patientids = new HashSet<String>();
+		for (int i=0; i<clinicalValues.size(); i++){
+			if (clinicalValues.get(i)[0]!=null){
+				if (!clinicalValues.get(i)[0].isEmpty()){
+					patientids.add(clinicalValues.get(i)[0]);
+				}
+			}
+		}
+		patientids.add("no_sample");
+		
+		for (int i=0; i<sampleValues.size(); i++){
+				if (!patientids.contains(sampleValues.get(i)[1])){
+					System.err.println("Patient not in clinical data file: " + sampleValues.get(i)[1]);
+					valid = false;
+				}
+		}
+		if (valid == false){
+			System.err.println("Please make sure all patients in the mutations file are present in the clinical data file");
+		}
+		
+		return valid;
+	}
+	
+	
 	public static boolean handleSurvivalExceptions(ArrayList<String[]> clinicalValues){
 		boolean valid = true;
 		HashSet<String> vitals = new HashSet<String>();
@@ -239,7 +271,7 @@ public class MainRun {
 	
 	
 	public static void printManual(){
-		System.out.println("HyperModules Command Line Version");
+		System.out.println("HyperModules CMD Line Version");
 		System.out.println();
 		System.out.println("SUMMARY:");
 		System.out.println("\tUSAGE: java -jar [*.jar] [-n network_interaction_file] [-s samplemutationdata] [-c clinicaldata] [-t statistical_test] [-S shuffle_number] [-C numberofprocessors] [-p pvaluecutoff]");
