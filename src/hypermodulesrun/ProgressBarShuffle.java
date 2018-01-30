@@ -68,7 +68,7 @@ public class ProgressBarShuffle implements Callable<HashMap<String, Multimap<Str
 
 			
 			for (String runSeed : filteredSeeds){
-				System.err.print(".");
+				System.out.println(runSeed); //print key name 
 				Multimap<String, Double> oneResult = testSeed(ha, runSeed);
 				rt.put(runSeed, oneResult);
 			}
